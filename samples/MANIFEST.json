@@ -1,0 +1,32 @@
+{
+  "psf/requests": {
+    "commit": "3c7baaa05ab4aa49cc819ce3a819d260de19c157",
+    "fetched": "2026-11-13",
+    "files": [
+      "close-issues.yml",
+      "codeql-analysis.yml",
+      "lint.yml",
+      "lock-issues.yml",
+      "publish.yml",
+      "run-tests.yml",
+      "typecheck.yml",
+      "zizmor.yml"
+    ]
+  },
+  "sindresorhus/ky": {
+    "commit": "3541888878c4d303a8bc2ad61815f4e048f55a5d",
+    "fetched": "2026-11-13",
+    "files": [
+      "main.yml"
+    ]
+  },
+  "rust-lang/rust": {
+    "commit": "75bb7a374ff3f5363432a17e8000b50a60a4530c",
+    "fetched": "2026-11-13",
+    "files": [
+      "ci.yml",
+      "ghcr.yml",
+      "post-merge.yml"
+    ]
+  }
+}

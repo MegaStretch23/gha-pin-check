@@ -5,11 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "gha-pin-check"
 version = "0.1.0"
-description = "Pinning and risk checker for GitHub Actions workflows. Standard library only."
+description = "Check GitHub Actions workflows for unpinned uses: refs and common risky patterns. Standard library only; text, JSON and SARIF output."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
-keywords = ["github-actions", "supply-chain", "security", "pinning", "ci"]
+keywords = ["github-actions", "supply-chain", "security", "sarif", "pinning"]
 
 [project.scripts]
 gha-pin-check = "gha_pin_check.cli:main"

@@ -1,1 +1,0 @@
-8 file(s), 24 uses: 24 pinned to a commit SHA, 0 on a tag, 0 on a branch, 0 other unpinned, 0 docker, 0 local or expression-built. Findings: high 0, medium 0, low 0
