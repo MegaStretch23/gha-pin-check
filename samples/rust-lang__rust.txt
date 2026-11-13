@@ -1,2 +1,0 @@
-samples/rust-lang__rust/.github/workflows/ci.yml:112: [medium] GHA006 script is downloaded and piped into an interpreter; pin and verify the download
-1 finding(s) in 3 file(s): 0 high, 1 medium, 0 low

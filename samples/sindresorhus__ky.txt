@@ -1,7 +1,0 @@
-samples/sindresorhus__ky/.github/workflows/main.yml:6: [medium] GHA005 no permissions: at workflow level or on job 'test'; the token gets the repository default scope
-samples/sindresorhus__ky/.github/workflows/main.yml:17: [medium] GHA001 actions/checkout is not pinned to a commit SHA (ref: v6)
-samples/sindresorhus__ky/.github/workflows/main.yml:18: [medium] GHA001 actions/setup-node is not pinned to a commit SHA (ref: v6)
-samples/sindresorhus__ky/.github/workflows/main.yml:24: [medium] GHA005 no permissions: at workflow level or on job 'browser'; the token gets the repository default scope
-samples/sindresorhus__ky/.github/workflows/main.yml:28: [medium] GHA001 actions/checkout is not pinned to a commit SHA (ref: v6)
-samples/sindresorhus__ky/.github/workflows/main.yml:29: [medium] GHA001 actions/setup-node is not pinned to a commit SHA (ref: v6)
-6 finding(s) in 1 file(s): 0 high, 6 medium, 0 low

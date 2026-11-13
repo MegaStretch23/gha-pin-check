@@ -1,0 +1,15 @@
+# Constructed example (not from a real repo): the two patterns the risk rules look for.
+name: triage
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - run: |
+          echo "New issue: ${{ github.event.issue.title }}"

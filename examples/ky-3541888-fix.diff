@@ -1,0 +1,26 @@
+diff --git a/.github/workflows/main.yml b/.github/workflows/main.yml
+index bd9c82c..1c8e480 100644
+--- a/.github/workflows/main.yml
++++ b/.github/workflows/main.yml
+@@ -14,8 +14,8 @@ jobs:
+           - 24
+           - 22
+     steps:
+-      - uses: actions/checkout@v6
+-      - uses: actions/setup-node@v6
++      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
++      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+         with:
+           node-version: ${{ matrix.node-version }}
+       - run: npm install
+@@ -25,8 +25,8 @@ jobs:
+     name: Browsers and static checks
+     runs-on: macos-latest
+     steps:
+-      - uses: actions/checkout@v6
+-      - uses: actions/setup-node@v6
++      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
++      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+         with:
+           node-version: latest
+       - run: npm install

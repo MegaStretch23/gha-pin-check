@@ -1,9 +1,0 @@
-# SYNTHETIC fixture: top-level write-all.
-name: perms
-on: push
-permissions: write-all
-jobs:
-  a:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo hi
