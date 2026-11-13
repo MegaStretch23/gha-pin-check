@@ -1,5 +1,0 @@
-.github/workflows/triage.yml:1: LOW    permissions-missing: no permissions: key; the token gets the repository or organization default, which may be read-write
-.github/workflows/triage.yml:11: LOW    unpinned-tag: actions/checkout@v4 is a first-party tag; the tag can be moved to other code. Pin the commit SHA and keep the tag in a comment
-.github/workflows/triage.yml:13: HIGH   pwn-request: pull_request_target runs with repo secrets and a write token, and this step checks out code from the pull request; that code can read them
-.github/workflows/triage.yml:15: HIGH   script-injection: ${{ github.event.issue.title }} is attacker-controlled text pasted into a run: block; pass it through env: and quote the variable
-1 files, 1 uses: lines, 4 findings (2 high, 0 medium, 2 low)
