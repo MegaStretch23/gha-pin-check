@@ -1,6 +1,6 @@
 # gha-pin-check
 
-Checks GitHub Actions workflows for `uses:` references that are not pinned to a commit SHA, and for a few common risky patterns. Python 3.9+ declared (tested here on 3.12 only), standard library only (no PyYAML), text / JSON / SARIF output.
+Checks GitHub Actions workflows for `uses:` references that are not pinned to a commit SHA, and for a few common risky patterns. Python 3.9+, standard library only (no PyYAML), text / JSON / SARIF output.
 
 A tag or branch such as `actions/checkout@v4` can be re-pointed by whoever controls the action's repository. A 40-character commit SHA cannot. Pinning is the usual mitigation; this tool finds the lines that are not pinned and, optionally, looks up the SHA for you.
 
