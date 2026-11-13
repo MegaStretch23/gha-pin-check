@@ -1,0 +1,97 @@
+{
+  "tool": "gha-pin-check",
+  "version": "0.1.0",
+  "files_scanned": 12,
+  "findings": [
+    {
+      "rule": "GHA005",
+      "severity": "medium",
+      "file": "samples/sindresorhus__ky/.github/workflows/main.yml",
+      "line": 6,
+      "message": "no permissions: at workflow level or on job 'test'; the token gets the repository default scope",
+      "snippet": "test:",
+      "extra": {
+        "job": "test"
+      },
+      "name": "permissions"
+    },
+    {
+      "rule": "GHA001",
+      "severity": "medium",
+      "file": "samples/sindresorhus__ky/.github/workflows/main.yml",
+      "line": 17,
+      "message": "actions/checkout is not pinned to a commit SHA (ref: v6)",
+      "snippet": "- uses: actions/checkout@v6",
+      "extra": {
+        "uses": "actions/checkout@v6",
+        "action": "actions/checkout",
+        "ref": "v6"
+      },
+      "name": "unpinned-action"
+    },
+    {
+      "rule": "GHA001",
+      "severity": "medium",
+      "file": "samples/sindresorhus__ky/.github/workflows/main.yml",
+      "line": 18,
+      "message": "actions/setup-node is not pinned to a commit SHA (ref: v6)",
+      "snippet": "- uses: actions/setup-node@v6",
+      "extra": {
+        "uses": "actions/setup-node@v6",
+        "action": "actions/setup-node",
+        "ref": "v6"
+      },
+      "name": "unpinned-action"
+    },
+    {
+      "rule": "GHA005",
+      "severity": "medium",
+      "file": "samples/sindresorhus__ky/.github/workflows/main.yml",
+      "line": 24,
+      "message": "no permissions: at workflow level or on job 'browser'; the token gets the repository default scope",
+      "snippet": "browser:",
+      "extra": {
+        "job": "browser"
+      },
+      "name": "permissions"
+    },
+    {
+      "rule": "GHA001",
+      "severity": "medium",
+      "file": "samples/sindresorhus__ky/.github/workflows/main.yml",
+      "line": 28,
+      "message": "actions/checkout is not pinned to a commit SHA (ref: v6)",
+      "snippet": "- uses: actions/checkout@v6",
+      "extra": {
+        "uses": "actions/checkout@v6",
+        "action": "actions/checkout",
+        "ref": "v6"
+      },
+      "name": "unpinned-action"
+    },
+    {
+      "rule": "GHA001",
+      "severity": "medium",
+      "file": "samples/sindresorhus__ky/.github/workflows/main.yml",
+      "line": 29,
+      "message": "actions/setup-node is not pinned to a commit SHA (ref: v6)",
+      "snippet": "- uses: actions/setup-node@v6",
+      "extra": {
+        "uses": "actions/setup-node@v6",
+        "action": "actions/setup-node",
+        "ref": "v6"
+      },
+      "name": "unpinned-action"
+    },
+    {
+      "rule": "GHA006",
+      "severity": "medium",
+      "file": "samples/rust-lang__rust/.github/workflows/ci.yml",
+      "line": 112,
+      "message": "script is downloaded and piped into an interpreter; pin and verify the download",
+      "snippet": "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh",
+      "extra": {},
+      "name": "curl-pipe-shell"
+    }
+  ]
+}

@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "gha-pin-check",
+          "version": "0.1.0",
+          "informationUri": "https://github.com/MegaStretch23/gha-pin-check",
+          "rules": [
+            {
+              "id": "GHA001",
+              "name": "unpinned-action",
+              "shortDescription": {
+                "text": "uses: ref is not a 40-character commit SHA (tag or branch refs can move)"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "GHA002",
+              "name": "docker-not-digest",
+              "shortDescription": {
+                "text": "docker:// image is not pinned by @sha256 digest"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "GHA003",
+              "name": "prt-checkout-pr-head",
+              "shortDescription": {
+                "text": "pull_request_target workflow checks out code from the pull request"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "GHA004",
+              "name": "script-injection",
+              "shortDescription": {
+                "text": "github.event / head_ref expression interpolated inside run: (shell injection)"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "GHA005",
+              "name": "permissions",
+              "shortDescription": {
+                "text": "permissions: missing (default token scope) or set to write-all"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "GHA006",
+              "name": "curl-pipe-shell",
+              "shortDescription": {
+                "text": "run: downloads a script and pipes it into a shell or interpreter"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "GHA005",
+          "ruleIndex": 4,
+          "level": "warning",
+          "message": {
+            "text": "no permissions: at workflow level or on job 'test'; the token gets the repository default scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "samples/sindresorhus__ky/.github/workflows/main.yml"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "GHA001",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "actions/checkout is not pinned to a commit SHA (ref: v6)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "samples/sindresorhus__ky/.github/workflows/main.yml"
+                },
+                "region": {
+                  "startLine": 17
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "GHA001",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "actions/setup-node is not pinned to a commit SHA (ref: v6)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "samples/sindresorhus__ky/.github/workflows/main.yml"
+                },
+                "region": {
+                  "startLine": 18
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "GHA005",
+          "ruleIndex": 4,
+          "level": "warning",
+          "message": {
+            "text": "no permissions: at workflow level or on job 'browser'; the token gets the repository default scope"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "samples/sindresorhus__ky/.github/workflows/main.yml"
+                },
+                "region": {
+                  "startLine": 24
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "GHA001",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "actions/checkout is not pinned to a commit SHA (ref: v6)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "samples/sindresorhus__ky/.github/workflows/main.yml"
+                },
+                "region": {
+                  "startLine": 28
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "GHA001",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "actions/setup-node is not pinned to a commit SHA (ref: v6)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "samples/sindresorhus__ky/.github/workflows/main.yml"
+                },
+                "region": {
+                  "startLine": 29
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "GHA006",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "script is downloaded and piped into an interpreter; pin and verify the download"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "samples/rust-lang__rust/.github/workflows/ci.yml"
+                },
+                "region": {
+                  "startLine": 112
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+# SYNTHETIC fixture: free-text event field in run:, unpinned docker image, write-all job, multi-line curl | bash.
+name: misc
+on: [issues, push]
+permissions:
+  contents: read
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - name: Echo title
+        run: |
+          echo "Title: ${{ github.event.issue.title }}"
+          echo "uses: not/a-real@v1 inside a script must be ignored"
+      - uses: docker://alpine:3.19
+      - uses: docker://alpine@sha256:c5b1261d6d3e43071626931fc004f70149baeba2c8ec672bd4f27761f8e1ad6b
+      - uses: ./local-action
+      - run: |
+          curl -fsSL https://example.com/install.sh \
+            | sudo bash
