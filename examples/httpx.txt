@@ -1,0 +1,7 @@
+.github/workflows/publish.yml:1  low    no-permissions  no `permissions:` block: the GITHUB_TOKEN gets the repository/org default, which may include write
+.github/workflows/publish.yml:17  low    unpinned-action  actions/checkout@v4 is a tag, which its owner can move; pin the commit SHA
+.github/workflows/publish.yml:18  low    unpinned-action  actions/setup-python@v6 is a tag, which its owner can move; pin the commit SHA
+.github/workflows/test-suite.yml:1  low    no-permissions  no `permissions:` block: the GITHUB_TOKEN gets the repository/org default, which may include write
+.github/workflows/test-suite.yml:20  low    unpinned-action  actions/checkout@v4 is a tag, which its owner can move; pin the commit SHA
+.github/workflows/test-suite.yml:21  low    unpinned-action  actions/setup-python@v6 is a tag, which its owner can move; pin the commit SHA
+2 file(s), 4 uses: 0 pinned to a commit SHA, 4 on a tag, 0 on a branch, 0 other unpinned, 0 docker, 0 local or expression-built. Findings: high 0, medium 0, low 6

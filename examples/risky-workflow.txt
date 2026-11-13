@@ -1,0 +1,8 @@
+examples/risky-workflow.yml:1  low    no-permissions  no `permissions:` block: the GITHUB_TOKEN gets the repository/org default, which may include write
+examples/risky-workflow.yml:4  low    pull-request-target  pull_request_target runs with write token and secrets on code from forks; keep it away from untrusted checkouts
+examples/risky-workflow.yml:10  low    unpinned-action  actions/checkout@v4 is a tag, which its owner can move; pin the commit SHA
+examples/risky-workflow.yml:12  high   untrusted-checkout  checks out the pull request / triggering branch under pull_request_target, so fork code runs with the privileged token
+examples/risky-workflow.yml:13  high   branch-ref  somevendor/label-action@main follows branch 'main': every push to it runs here
+examples/risky-workflow.yml:14  high   script-injection  ${{ github.event.pull_request.title }} is expanded into the run script before the shell sees it; pass it through an env: variable
+examples/risky-workflow.yml:15  medium pipe-to-shell  downloads a script and pipes it into a shell without a checksum
+1 file(s), 2 uses: 0 pinned to a commit SHA, 1 on a tag, 1 on a branch, 0 other unpinned, 0 docker, 0 local or expression-built. Findings: high 3, medium 1, low 3

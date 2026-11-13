@@ -1,78 +1,87 @@
 # gha-pin-check
 
-Checks GitHub Actions workflows for `uses:` references that are not pinned to a commit SHA, and for a few common risky patterns. Python 3.9+, standard library only (no PyYAML), text / JSON / SARIF output.
+Find the GitHub Actions in your workflows that are **not pinned to a commit SHA**, and a few patterns that make a workflow risky. One small command, **Python 3.9+, standard library only**, no network unless you ask for it.
 
-A tag or branch such as `actions/checkout@v4` can be re-pointed by whoever controls the action's repository. A 40-character commit SHA cannot. Pinning is the usual mitigation; this tool finds the lines that are not pinned and, optionally, looks up the SHA for you.
+A `uses: owner/action@v4` line runs whatever that tag points to *today*. Tags and branches can be moved by the action's owner (or by whoever takes over the account), and your workflow runs the new code with your token and secrets. Pinning to the full 40-character commit SHA fixes the code you run. This tool lists every `uses:` that is not pinned and what to change.
 
 ## Quickstart
 
-```
-git clone https://github.com/MegaStretch23/gha-pin-check
+```bash
+git clone https://github.com/MegaStretch23/gha-pin-check.git
 cd gha-pin-check
-python3 -m gha_pin_check.cli /path/to/your/repo            # scans <repo>/.github/workflows/*.yml|*.yaml
-python3 -m gha_pin_check.cli path/to/workflow.yml --format sarif > results.sarif
-python3 -m gha_pin_check.cli . --fail-on medium            # exit 1 in CI if anything is medium or higher
-python3 -m gha_pin_check.cli . --resolve                   # also print a pinned `uses:` line for each tag/branch ref
+
+# check any repo checkout: reads .github/workflows/*.yml|yaml, action.yml and .github/actions/**/action.yml
+python -m gha_pin_check /path/to/some/repo
+
+# also look up the commit SHA behind each tag/branch and print the pinned replacement line
+GITHUB_TOKEN=... python -m gha_pin_check /path/to/some/repo --resolve
+
+# for CI: exit 1 when anything of severity high (or medium, low) is found; JSON for other tools
+python -m gha_pin_check . --fail-on high
+python -m gha_pin_check . --format json
 ```
 
-Or `pip install .` and run `gha-pin-check`. Run the tests with `python3 -m pytest` (needs pytest only for the tests).
+Exit codes: `0` ran (and nothing at/above `--fail-on`), `1` findings at/above `--fail-on`, `2` a problem (no workflow files found, unreadable file, a `--resolve` lookup that failed). It never reports "clean" when it could not look.
 
-## What it flags
+## What it reports
 
 | rule | severity | meaning |
 |---|---|---|
-| GHA001 | medium | `uses: owner/repo@ref` where `ref` is not a 40-character hex SHA (also reusable workflows). `./local` actions and `docker://` are skipped |
-| GHA002 | medium | `uses: docker://image` without an `@sha256:` digest |
-| GHA003 | high | workflow triggered by `pull_request_target` that runs `actions/checkout` with a `ref:`/`repository:` taken from the pull request (`github.event.pull_request.head.*`, `github.head_ref`, `refs/pull/...`, `merge_commit_sha`, `workflow_run.head_*`) |
-| GHA004 | high / medium / low | `${{ github.event.* }}` or `github.head_ref` expanded inside `run:`. High for fields that can carry free text (titles, bodies, branch names, ...), medium for `inputs` / `client_payload`, low for numbers, SHAs and similar fields |
-| GHA005 | medium / high | no `permissions:` at workflow level or on a job (default token scope applies); high for `permissions: write-all` |
-| GHA006 | medium | `curl`/`wget` piped into `sh`/`bash`/`zsh`/`python`, or `bash <(curl ...)` inside `run:` |
+| `branch-ref` | high | `uses: x/y@main`: every push to that branch runs in your workflow |
+| `short-sha` | high | an abbreviated SHA is not a valid pin; use all 40 characters |
+| `no-ref` | high | `uses: x/y` with no `@ref` |
+| `unpinned-action` | low for `actions/*` and `github/*`, medium for everyone else | a tag such as `@v4`, which its owner can move |
+| `unpinned-docker` | medium | `docker://image:tag` without an `@sha256:` digest |
+| `untrusted-checkout` | high | `pull_request_target` / `workflow_run` workflow that checks out the pull request's head or branch |
+| `script-injection` | high | `${{ github.event.pull_request.title }}`, `github.head_ref`, issue/comment bodies, commit messages... expanded inside a `run:` or `script:` body; pass them through `env:` instead |
+| `pipe-to-shell` | medium | `curl ... \| bash` in a `run:` body |
+| `write-all`, `unsecure-commands` | medium | `permissions: write-all`; `ACTIONS_ALLOW_UNSECURE_COMMANDS: true` |
+| `pull-request-target`, `no-permissions`, `secrets-inherit`, `self-hosted` | low | worth a look: privileged trigger, no `permissions:` block (the token then gets the repo/org default), `secrets: inherit`, self-hosted runner |
 
-`--ignore GHA005` skips a rule (repeatable). Exit codes: 0 ok, 1 findings at or above `--fail-on`, 2 bad path.
+Pinned to a full SHA, local (`./path`) and `docker://...@sha256:` uses produce no finding. A `uses:` built from an expression is counted but cannot be judged.
 
-## Real sample run
+## Real sample runs
 
-Workflows were downloaded at the commit recorded in `samples/MANIFEST.json` (fetched 2026-11-13 with `tools/fetch_samples.py`) and scanned with this version. Outputs are saved in `samples/`.
+Cloned with `--depth 1` on 2026-11-13 and run with exactly this code. Full outputs are in [`examples/`](examples/).
 
+**`psf/requests` @ `3c7baaa`** (8 workflow files): every action is pinned.
+
+```text
+8 file(s), 24 uses: 24 pinned to a commit SHA, 0 on a tag, 0 on a branch, 0 other unpinned, 0 docker, 0 local or expression-built. Findings: high 0, medium 0, low 0
 ```
-$ python3 -m gha_pin_check.cli samples/psf__requests
-0 finding(s) in 8 file(s): 0 high, 0 medium, 0 low
 
-$ python3 -m gha_pin_check.cli samples/sindresorhus__ky --resolve
-samples/sindresorhus__ky/.github/workflows/main.yml:6: [medium] GHA005 no permissions: at workflow level or on job 'test'; the token gets the repository default scope
-samples/sindresorhus__ky/.github/workflows/main.yml:17: [medium] GHA001 actions/checkout is not pinned to a commit SHA (ref: v6)
-    suggested: uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-samples/sindresorhus__ky/.github/workflows/main.yml:18: [medium] GHA001 actions/setup-node is not pinned to a commit SHA (ref: v6)
-    suggested: uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+**`sindresorhus/ky` @ `3541888`**, with `--resolve`:
+
+```text
+.github/workflows/main.yml:1  low    no-permissions  no `permissions:` block: the GITHUB_TOKEN gets the repository/org default, which may include write
+.github/workflows/main.yml:17  low    unpinned-action  actions/checkout@v6 is a tag, which its owner can move; pin the commit SHA
+    -> actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+.github/workflows/main.yml:18  low    unpinned-action  actions/setup-node@v6 is a tag, which its owner can move; pin the commit SHA
+    -> actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
 ...
-6 finding(s) in 1 file(s): 0 high, 6 medium, 0 low
-
-$ python3 -m gha_pin_check.cli samples/rust-lang__rust
-samples/rust-lang__rust/.github/workflows/ci.yml:112: [medium] GHA006 script is downloaded and piped into an interpreter; pin and verify the download
-1 finding(s) in 3 file(s): 0 high, 1 medium, 0 low
+1 file(s), 4 uses: 0 pinned to a commit SHA, 4 on a tag, 0 on a branch, ...  Findings: high 0, medium 0, low 5
 ```
 
-Combined JSON and SARIF for the three repos: `samples/all.json`, `samples/all.sarif`.
+The two SHAs were checked against `git ls-remote https://github.com/actions/checkout refs/tags/v6` and the same for `actions/setup-node` on the day of the run. `encode/httpx` @ `b5addb6` gives 4 tag uses and 6 low findings ([`examples/httpx.txt`](examples/httpx.txt)).
 
-What this does and does not show: psf/requests has no finding **for these six rules**; that is not a security audit of the project. The `suggested:` SHAs are what the tag pointed to when the run was made. `--resolve` only prints them; nothing edits your files, and you should check that the SHA belongs to the release you intend.
-
-## `--resolve` and offline use
-
-Scanning never touches the network. `--resolve` asks the GitHub REST API (`/git/ref/tags/<ref>`, then `/heads/<ref>`, following annotated tags to the commit) once per `owner/repo@ref`, using `GITHUB_TOKEN` if set (unauthenticated requests are rate-limited to 60/hour per IP). If the lookup fails, the finding is kept and marked `could not resolve: <reason>`.
+**A constructed workflow** ([`examples/risky-workflow.yml`](examples/risky-workflow.yml), written for this README, not taken from a real project) that trips the high-severity rules: see [`examples/risky-workflow.txt`](examples/risky-workflow.txt).
 
 ## Limits
 
-- Line-based parser: block scalars (`run: |`) and single-line `run:` values are read; multi-line plain/quoted scalars, YAML anchors and flow mappings spanning lines are not followed.
-- GHA004 looks only at `run:`; expressions in `actions/github-script` `script:` inputs are not checked.
-- GHA005 does not judge which scopes a job needs, only that none are declared.
-- Pinned SHAs still need updating; pair with Dependabot or Renovate.
+- It reads workflow text line by line; it is **not a YAML parser** and does not expand anchors, matrices, reusable-workflow inputs or `${{ }}` expressions. Odd formatting can hide a `uses:` line from it; it reads only the files it lists.
+- A SHA pin fixes which code runs. It does not tell you the code is safe, and it does not pin what an action downloads itself. Pinned actions also need updates (Dependabot or Renovate can bump SHAs).
+- The injection and checkout rules look for a fixed list of well-known contexts. A clean result is not a security review.
+- `--resolve` makes one request per distinct `owner/repo@ref` to `api.github.com`. Unauthenticated calls are rate limited; set `GITHUB_TOKEN` (read only is enough). Nothing else uses the network.
 
 ## Tests
 
-`tests/` holds 25 pytest tests. `tests/fixtures/real/` are unmodified workflow files from psf/requests, sindresorhus/ky, vercel/next.js, denoland/deno, facebook/react, nodejs/node, tiangolo/fastapi and rust-lang/rust. No real public file I found combined `pull_request_target` with a PR-head checkout or used `docker://`, so those cases are hand-written files in `tests/fixtures/synthetic/`, marked as synthetic in their first line.
+`pip install pytest && python -m pytest` (13 tests, build their own workflow fixtures; the `--resolve` tests use a fake resolver, no network).
 
-## Related
+## Related, hosted
 
-I also run hosted data tools on Apify, for example the pay-per-event [SEC Form 4 insider cluster scanner](https://apify.com/johnveds15/sec-form4-insider-clusters). They do something different from this tool; there is no paid version of gha-pin-check.
+If you would rather not run scanners yourself, the author runs two pay-per-event Apify actors (prices read from the Apify API on 2026-11-13; check each page for current prices):
 
-MIT license.
+- **[AI API Key Leak Scanner: GitHub Repos + URLs](https://apify.com/johnveds15/ai-api-key-leak-scanner)**: checks public GitHub repos and JS/text URLs for leaked API keys. $0.01 per repository or URL scanned.
+- **[CVE Vulnerability Scraper: NIST NVD](https://apify.com/johnveds15/openvuln-cve-scanner)**: recent CVEs by product, vendor or keyword. $0.002 per CVE result.
+
+MIT licensed.

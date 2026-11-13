@@ -1,54 +1,104 @@
 from __future__ import annotations
-import argparse, sys
-from pathlib import Path
-from . import __version__
-from .scanner import scan_text, SEV_ORDER, RULES
-from . import report, resolve
+
+import argparse
+import glob
+import json
+import os
+import sys
+
+from . import __version__, parse, rules
+from .resolve import fetch_sha
 
 
-def discover(paths: list[str]) -> list[Path]:
-    """Files given as-is; a directory means <dir>/.github/workflows if present, else the *.yml/*.yaml directly inside <dir>."""
-    found: list[Path] = []
-    for p in map(Path, paths):
-        if p.is_file():
-            found.append(p)
-        elif p.is_dir():
-            base = p / ".github" / "workflows"
-            base = base if base.is_dir() else p
-            found += sorted(x for x in base.iterdir() if x.is_file() and x.suffix in (".yml", ".yaml"))
-        else:
-            raise FileNotFoundError(str(p))
+def discover(path: str):
+    if os.path.isfile(path):
+        return [path]
+    pats = [".github/workflows/*.yml", ".github/workflows/*.yaml", "action.yml", "action.yaml",
+            ".github/actions/**/action.yml", ".github/actions/**/action.yaml"]
+    found = sorted({p for pat in pats for p in glob.glob(os.path.join(path, pat), recursive=True)})
     return found
 
 
-def run(paths, fmt="text", fail_on=None, do_resolve=False, ignore=(), get=None) -> tuple[str, int]:
-    files = discover(paths)
-    findings = []
-    for f in files:
-        findings += scan_text(f.read_text(encoding="utf-8", errors="replace"), f.as_posix())
-    findings = [f for f in findings if f.rule not in set(ignore)]
-    if do_resolve:
-        resolve.suggest(findings, **({"get": get} if get else {}))
-    out = {"text": report.to_text, "json": report.to_json, "sarif": report.to_sarif}[fmt](findings, len(files))
-    code = 1 if fail_on and any(SEV_ORDER[f.severity] >= SEV_ORDER[fail_on] for f in findings) else 0
-    return out, code
+def scan(paths, resolver=None, root=""):
+    findings, totals, errors, files = [], {}, [], 0
+    cache = {}
+    for p in paths:
+        try:
+            with open(p, encoding="utf-8") as fh:
+                text = fh.read()
+        except (OSError, UnicodeDecodeError) as e:
+            errors.append(f"{p}: cannot read ({e})")
+            continue
+        files += 1
+        rel = os.path.relpath(p, root) if root else p
+        facts = parse.read(text)
+        f, counts = rules.check_uses(facts, rel)
+        for k, v in counts.items():
+            totals[k] = totals.get(k, 0) + v
+        if resolver:
+            for fd in f:
+                kind, repo, ref = rules.classify(fd.uses)
+                if kind in ("tag", "branch") and repo:
+                    key = (repo, ref)
+                    if key not in cache:
+                        try:
+                            cache[key] = resolver(repo, ref)
+                        except RuntimeError as e:
+                            cache[key] = None
+                            errors.append(f"{rel}:{fd.line}: could not resolve {fd.uses}: {e}")
+                    if cache[key]:
+                        target = fd.uses.rsplit("@", 1)[0]
+                        fd.suggestion = f"{target}@{cache[key]} # {ref}"
+        findings += f + rules.check_risks(facts, rel)
+    findings.sort(key=lambda x: (x.file, x.line, -rules.SEV[x.severity]))
+    return findings, totals, errors, files
+
+
+def summary(files, totals, findings):
+    sev = {s: sum(1 for f in findings if f.severity == s) for s in ("high", "medium", "low")}
+    n = sum(totals.values())
+    return (f"{files} file(s), {n} uses: {totals.get('sha', 0)} pinned to a commit SHA, {totals.get('tag', 0)} on a tag, "
+            f"{totals.get('branch', 0)} on a branch, {totals.get('short-sha', 0) + totals.get('other', 0)} other unpinned, "
+            f"{totals.get('docker', 0)} docker, {totals.get('local', 0)} local or expression-built. Findings: high {sev['high']}, medium {sev['medium']}, low {sev['low']}")
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(prog="gha-pin-check", description="Check GitHub Actions workflows for unpinned uses: refs and risky patterns.")
-    ap.add_argument("paths", nargs="*", default=["."], help="workflow files, or a repo/workflows directory (default: .)")
-    ap.add_argument("--format", choices=["text", "json", "sarif"], default="text")
-    ap.add_argument("--fail-on", choices=["low", "medium", "high"], help="exit 1 if any finding has at least this severity")
-    ap.add_argument("--resolve", action="store_true", help="look up commit SHAs for unpinned tag/branch refs via the GitHub API (GITHUB_TOKEN used if set)")
-    ap.add_argument("--ignore", action="append", default=[], metavar="RULE", help=f"skip a rule id ({', '.join(RULES)}); repeatable")
-    ap.add_argument("--version", action="version", version=f"gha-pin-check {__version__}")
+    ap = argparse.ArgumentParser(prog="gha-pin-check", description="Check GitHub Actions workflows for unpinned actions and risky patterns.")
+    ap.add_argument("paths", nargs="*", default=["."], help="repo folders or workflow files (default: .)")
+    ap.add_argument("--format", choices=["text", "json"], default="text")
+    ap.add_argument("--resolve", action="store_true", help="look up the commit SHA behind each tag/branch via the GitHub API and print a pinned replacement line")
+    ap.add_argument("--fail-on", choices=["low", "medium", "high"], help="exit 1 if any finding is at least this severity")
+    ap.add_argument("--min-severity", choices=["low", "medium", "high"], default="low", help="hide findings below this severity")
+    ap.add_argument("--version", action="version", version=__version__)
     a = ap.parse_args(argv)
-    try:
-        out, code = run(a.paths, a.format, a.fail_on, a.resolve, a.ignore)
-    except FileNotFoundError as e:
-        print(f"gha-pin-check: no such path: {e}", file=sys.stderr); return 2
-    print(out)
-    return code
+    token = os.environ.get("GITHUB_TOKEN", "")
+    resolver = (lambda repo, ref: fetch_sha(repo, ref, token)) if a.resolve else None
+    allf, tot, errs, nfiles = [], {}, [], 0
+    for path in a.paths:
+        files = discover(path)
+        if not files:
+            errs.append(f"{path}: no workflow or action files found (looked for .github/workflows/*.yml|yaml, action.yml)")
+            continue
+        f, t, e, n = scan(files, resolver, root=path if os.path.isdir(path) else "")
+        allf += f; errs += e; nfiles += n
+        for k, v in t.items():
+            tot[k] = tot.get(k, 0) + v
+    shown = [f for f in allf if rules.SEV[f.severity] >= rules.SEV[a.min_severity]]
+    if a.format == "json":
+        print(json.dumps({"files": nfiles, "uses": tot, "findings": [f.as_dict() for f in shown], "errors": errs}, indent=2))
+    else:
+        for f in shown:
+            print(f"{f.file}:{f.line}  {f.severity:<6} {f.rule}  {f.message}")
+            if f.suggestion:
+                print(f"    -> {f.suggestion}")
+        print(summary(nfiles, tot, allf))
+    for e in errs:
+        print(f"error: {e}", file=sys.stderr)
+    if errs:
+        return 2
+    if a.fail_on and any(rules.SEV[f.severity] >= rules.SEV[a.fail_on] for f in allf):
+        return 1
+    return 0
 
 
 if __name__ == "__main__":

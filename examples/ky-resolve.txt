@@ -1,0 +1,10 @@
+.github/workflows/main.yml:1  low    no-permissions  no `permissions:` block: the GITHUB_TOKEN gets the repository/org default, which may include write
+.github/workflows/main.yml:17  low    unpinned-action  actions/checkout@v6 is a tag, which its owner can move; pin the commit SHA
+    -> actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+.github/workflows/main.yml:18  low    unpinned-action  actions/setup-node@v6 is a tag, which its owner can move; pin the commit SHA
+    -> actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+.github/workflows/main.yml:28  low    unpinned-action  actions/checkout@v6 is a tag, which its owner can move; pin the commit SHA
+    -> actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+.github/workflows/main.yml:29  low    unpinned-action  actions/setup-node@v6 is a tag, which its owner can move; pin the commit SHA
+    -> actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+1 file(s), 4 uses: 0 pinned to a commit SHA, 4 on a tag, 0 on a branch, 0 other unpinned, 0 docker, 0 local or expression-built. Findings: high 0, medium 0, low 5

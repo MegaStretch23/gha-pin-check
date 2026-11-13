@@ -1,0 +1,15 @@
+# Constructed example (not from a real repo) that trips the high-severity rules.
+name: triage
+on:
+  pull_request_target:
+    types: [opened]
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: somevendor/label-action@main
+      - run: echo "New PR: ${{ github.event.pull_request.title }}"
+      - run: curl -fsSL https://example.com/install.sh | bash
