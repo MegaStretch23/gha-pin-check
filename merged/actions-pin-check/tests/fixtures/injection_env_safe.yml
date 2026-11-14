@@ -1,0 +1,11 @@
+on: issues
+permissions:
+  issues: read
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: say
+        env:
+          TITLE: ${{ github.event.issue.title }}
+        run: echo "New issue $TITLE"

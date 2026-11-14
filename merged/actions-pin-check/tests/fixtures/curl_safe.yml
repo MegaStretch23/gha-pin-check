@@ -1,0 +1,11 @@
+on: push
+permissions: {}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: install
+        run: |
+          curl -sSLo install.sh https://example.com/install.sh
+          echo "$EXPECTED  install.sh" | sha256sum -c -
+          bash install.sh

@@ -1,0 +1,2 @@
+node.js.yml: https://github.com/actions/starter-workflows/blob/e3c451d60f119b71caebf13c98ac45da6e15b4b7/ci/node.js.yml
+A real public workflow (GitHub's own starter workflow "Node.js"), fetched unmodified on 2026-11-13 from the commit above. Used for the README sample output.

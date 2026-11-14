@@ -76,3 +76,7 @@ Scanning never touches the network. `--resolve` asks the GitHub REST API (`/git/
 I also run hosted data tools on Apify, for example the pay-per-event [SEC Form 4 insider cluster scanner](https://apify.com/johnveds15/sec-form4-insider-clusters). They do something different from this tool; there is no paid version of gha-pin-check.
 
 MIT license.
+
+## Merged from actions-pin-check
+
+`actions-pin-check` was the same idea built twice. Its own files are kept in [`merged/actions-pin-check/`](merged/actions-pin-check/) (unique parts: see that folder's README and tests); the old repo now points here: https://github.com/MegaStretch23/actions-pin-check

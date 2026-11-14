@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Actions Pin Check: find unpinned actions and risky patterns in a GitHub Actions workflow (paste it, runs in your browser)</title>
+<meta name="description" content="Paste a GitHub Actions workflow. The page flags uses: references that are not pinned to a full commit SHA, pull_request_target with a checkout of the PR head, github.event values pasted into run: steps, write-all or missing permissions, and curl piped into a shell. Nothing is uploaded.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+<h1>Actions Pin Check</h1>
+<p class="lead">Paste a GitHub Actions workflow and see which <code>uses:</code> lines are not pinned to a full 40-character commit SHA (tags, branches, <code>@main</code>), and which patterns are risky: <code>pull_request_target</code> with a checkout of the pull request's code, <code>${{ github.event.* }}</code> pasted into a <code>run:</code> step, <code>permissions: write-all</code> or no <code>permissions:</code> block, and <code>curl | sh</code>.</p>
+<p class="priv"><b>Private by construction.</b> The check runs in this page. Your workflow is not uploaded and the page code makes no network calls. This is a heuristic, line-based check, <b>not a security audit</b>. The same rules ship as a one-file stdlib Python CLI (<a href="actions_pin_check.py">actions_pin_check.py</a>) that can also look up the commit SHAs with <code>--resolve</code>.</p>
+</header>
+<main>
+<section class="box" aria-labelledby="h-in">
+<h2 id="h-in">1. Paste a workflow</h2>
+<label for="wf">Contents of a file from <code>.github/workflows/</code></label>
+<textarea id="wf" rows="16" spellcheck="false" placeholder="name: ci&#10;on: push&#10;jobs:&#10;  build:&#10;    runs-on: ubuntu-latest&#10;    steps:&#10;      - uses: actions/checkout@v4"></textarea>
+<div class="row"><button id="check" type="button">Check</button><button id="example" type="button">Load an example</button><button id="clear" type="button">Clear</button></div>
+<p id="status" class="msg" role="status"></p>
+</section>
+<section class="box" id="report" hidden aria-labelledby="h-rep">
+<h2 id="h-rep">2. Findings</h2>
+<div id="verdict" class="verdict" role="status"></div>
+<p id="fileinfo" class="hint"></p>
+<div id="findings"></div>
+<div class="row"><button id="dljson" type="button">Download report (JSON)</button><button id="cpjson" type="button">Copy report (JSON)</button></div>
+<p class="hint" id="limits"></p>
+</section>
+<section class="box" aria-labelledby="h-how">
+<h2 id="h-how">What is checked</h2>
+<ul>
+<li><b>Pinning</b>: a <code>uses: owner/repo@ref</code> whose ref is not a full 40-character commit SHA. A branch (<code>@main</code>, <code>@release/v2</code>) or a missing ref is a FAIL; a tag (<code>@v4</code>), an abbreviated SHA or a <code>docker://</code> image without an <code>@sha256:</code> digest is a WARN. Local <code>./</code> actions are skipped.</li>
+<li><b>pull_request_target</b>: a workflow triggered by it whose <code>actions/checkout</code> step takes the pull request's head (<code>github.event.pull_request.head.*</code>, <code>github.head_ref</code>, <code>refs/pull/.../merge</code>) is a FAIL.</li>
+<li><b>Script injection</b>: <code>${{ ... }}</code> in a <code>run:</code> step. Known attacker-controlled values (issue and pull request titles and bodies, comment bodies, <code>github.head_ref</code>, commit messages and author names) are a FAIL; other <code>github.event.*</code> values are a WARN. Pass them through <code>env:</code> and quote the variable.</li>
+<li><b>Permissions</b>: <code>permissions: write-all</code> is a FAIL; no top-level <code>permissions:</code> block together with a job that has none is a WARN.</li>
+<li><b>curl | sh</b>: <code>curl</code> or <code>wget</code> piped into a shell (also <code>bash &lt;(curl ...)</code>) in a <code>run:</code> step is a FAIL.</li>
+</ul>
+<p class="hint">Not covered: reusable workflows and composite actions, <code>github-script</code> <code>script:</code> blocks, whether a pinned commit is one you trust, and anything a line-based reader cannot see. The page does not look up SHAs (that needs the network); the CLI does with <code>--resolve</code>.</p>
+</section>
+<section class="box" aria-labelledby="h-rel">
+<h2 id="h-rel">Related tools from the same author</h2>
+<ul>
+<li><a href="https://apify.com/johnveds15/openvuln-cve-scanner">OpenVuln CVE Scanner</a> on Apify (paid, per use): queries the NIST NVD for recent CVEs by product or keyword and returns one row per CVE.</li>
+<li><a href="https://gumroad.com/l/dnkrjd">AI App Secrets Scanner</a> on Gumroad: a browser tool that checks pasted code for leaked keys.</li>
+<li><a href="https://gumroad.com/l/gvvcsh">pdfguard</a> on Gumroad (US$19): a Python tool that looks for hidden text in PDFs before an LLM reads them.</li>
+</ul>
+</section>
+</main>
+<footer><p>Free, MIT licensed. Source: this Space's files. No account, no tracking.</p></footer>
+<script src="core.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

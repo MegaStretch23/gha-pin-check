@@ -1,0 +1,12 @@
+on: issues
+permissions:
+  issues: write
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: say
+        run: echo "New issue ${{ github.event.issue.title }}"
+      - name: multi
+        run: |
+          echo "branch is ${{ github.head_ref }}"

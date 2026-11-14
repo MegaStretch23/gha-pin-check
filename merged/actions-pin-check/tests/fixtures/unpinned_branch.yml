@@ -1,0 +1,9 @@
+on: push
+permissions: read-all
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: some-org/some-action@main
+      - uses: "other-org/tools/sub/dir@release/v2"

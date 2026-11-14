@@ -1,0 +1,7 @@
+on: push
+permissions: {}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: some-org/some-action

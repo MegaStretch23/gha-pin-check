@@ -1,0 +1,8 @@
+on: push
+permissions: {}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: install
+        run: curl -sSL https://example.com/install.sh | sudo bash
